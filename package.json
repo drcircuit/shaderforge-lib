@@ -1,0 +1,19 @@
+{
+  "name": "shaderforge-lib",
+  "version": "0.1.0",
+  "description": "A library for creating WebGPU shader effects on webpages and webapps.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/drcircuit/shaderforge-lib.git"
+  },
+  "license": "SEE LICENSE IN LICENSE.md",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^16.18.126",
+    "typescript": "^4.9.5"
+  }
+}
