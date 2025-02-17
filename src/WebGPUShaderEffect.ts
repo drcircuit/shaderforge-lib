@@ -3,7 +3,6 @@
 // src/ShaderforgeComponent.ts
 
 import { ExtraUniformManager } from "./ExtraUniformManager";
-import { globalUniformsWGSL } from "./GlobalUniformsWGSL";
 import { WebGPUDebug } from './WebGPUDebug';
 import { TimingHelper } from './TimingHelper';
 import { PerformanceMonitor } from './PerformanceMonitor';
