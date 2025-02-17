@@ -1,6 +1,6 @@
 {
   "name": "shaderforge-lib",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "description": "A library for creating WebGPU shader effects on webpages and webapps.",
   "main": "./dist/index.js",

@@ -4,17 +4,29 @@ import { WebGPUShaderEffect } from "./WebGPUShaderEffect";
 import { ShaderEditor } from './ShaderEditor';
 import { Logger } from './Logger';
 
+// Add options interface
+export interface ShaderforgeOptions {
+  enableEditor?: boolean;
+}
+
 export class ShaderforgeComponent {
   private container: HTMLElement;
   private canvas: HTMLCanvasElement;
   private effect: WebGPUShaderEffect;
-  private currentVertexUrl: string = "";
-  private currentFragmentUrl: string = "";
-  private shaderEditor: ShaderEditor;
-  private fragmentShaderCode: string = '';
+  private vertexShaderSource: string = '';
+  private fragmentShaderSource: string = '';
+  private shaderEditor: ShaderEditor | null = null;
+  private options: ShaderforgeOptions;
+  private isInitialized: boolean = false;
+  private pendingShaders: {vertex: string, fragment: string, isUrl: boolean} | null = null;
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, options: ShaderforgeOptions = {}) {
     this.container = container;
+    this.options = {
+      enableEditor: true,
+      ...options
+    };
+
     this.canvas = document.createElement("canvas");
     container.appendChild(this.canvas);
 
@@ -34,53 +46,89 @@ export class ShaderforgeComponent {
     // Instantiate the shader effect.
     this.effect = new WebGPUShaderEffect(this.canvas);
 
-    // Optional: Add mouse and key event listeners to update uniforms.
-    this.canvas.addEventListener("mousemove", (e) => {
-      const rect = this.canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      // Normalize coordinates to [0, 1]
-    });
+    // Initialize editor only if enabled
+    if (this.options.enableEditor) {
+      this.shaderEditor = new ShaderEditor(container, async (code) => {
+        this.fragmentShaderSource = code;
+        if (this.isInitialized) {
+          await this.recompileShaders();
+        }
+      });
+    }
+  }
 
-    window.addEventListener("keydown", (e) => {
-    });
+  // Update method to handle both URLs and source code
+  async setShaders(vertex: string, fragment: string, isUrl: boolean = false) {
+    this.pendingShaders = { vertex, fragment, isUrl };
+    
+    if (this.isInitialized) {
+      await this.loadAndCompileShaders();
+    }
+  }
 
-    this.shaderEditor = new ShaderEditor(container, async (code) => {
-      this.fragmentShaderCode = code;
+  private async loadAndCompileShaders(): Promise<void> {
+    if (!this.pendingShaders) return;
+    
+    const { vertex, fragment, isUrl } = this.pendingShaders;
+    
+    try {
+      if (isUrl) {
+        const [vertexResponse, fragmentResponse] = await Promise.all([
+          fetch(vertex),
+          fetch(fragment)
+        ]);
+
+        if (!vertexResponse.ok || !fragmentResponse.ok) {
+          throw new Error('Failed to load shaders from URLs');
+        }
+
+        this.vertexShaderSource = await vertexResponse.text();
+        this.fragmentShaderSource = await fragmentResponse.text();
+      } else {
+        this.vertexShaderSource = vertex;
+        this.fragmentShaderSource = fragment;
+      }
+
+      if (this.shaderEditor) {
+        this.shaderEditor.setCode(this.fragmentShaderSource);
+      }
+      
       await this.recompileShaders();
-    });
+    } catch (error) {
+      Logger.error('Failed to load/compile shaders:', error);
+      throw error;
+    }
   }
 
-  // Set shader URLs so they can be reused on reload.
-  setShaderURLs(vertexUrl: string, fragmentUrl: string) {
-    this.currentVertexUrl = vertexUrl;
-    this.currentFragmentUrl = fragmentUrl;
+  /**
+   * Set shader sources from URLs.
+   * @param vertexUrl URL to the vertex shader source
+   * @param fragmentUrl URL to the fragment shader source
+   */
+  async setShaderURLs(vertexUrl: string, fragmentUrl: string): Promise<void> {
+    await this.setShaders(vertexUrl, fragmentUrl, true);
   }
 
-  // Initialize WebGPU and load the shaders.
+  // Initialize WebGPU
   async initialize() {
     await this.effect.initialize();
-    await this.loadShaders();
-    await this.recompileShaders();
-  }
-
-  async loadShaders(): Promise<void> {
-    // Load fragment shader
-    const response = await fetch(this.currentFragmentUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to load fragment shader: ${this.currentFragmentUrl}`);
+    this.isInitialized = true;
+    
+    if (this.pendingShaders) {
+      await this.loadAndCompileShaders();
     }
-    this.fragmentShaderCode = await response.text();
-    this.shaderEditor.setCode(this.fragmentShaderCode);
   }
 
   private async recompileShaders(): Promise<void> {
     try {
-      const vertexCode = await this.effect.loadShaderFromURL(this.currentVertexUrl);
-      await this.effect.createRenderPipeline(vertexCode, this.fragmentShaderCode);
+      await this.effect.createRenderPipeline(
+        this.vertexShaderSource, 
+        this.fragmentShaderSource
+      );
       this.effect.startRendering();
     } catch (error) {
       Logger.error('Failed to recompile shaders:', error);
+      throw error;
     }
   }
 
@@ -107,11 +155,11 @@ export class ShaderforgeComponent {
     this.canvas.height = height;
   }
 
-  // Reload and recompile shaders upon CTRL+ENTER.
+  // Update the reload method
   async reloadEffect() {
-    console.log("Reloading shader effect...");
+    Logger.log("Reloading shader effect...");
     this.effect.stopRendering();
-    await this.effect.reloadShaders(this.currentVertexUrl, this.currentFragmentUrl);
+    await this.recompileShaders();
     this.effect.startRendering();
   }
 }
