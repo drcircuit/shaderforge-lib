@@ -1,0 +1,19 @@
+{
+  "name": "hello-world",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "shaderforge-lib": "file:../../dist/package"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.5",
+    "@webgpu/types": "^0.1.54",
+    "vite": "^5.1.0"
+  }
+}

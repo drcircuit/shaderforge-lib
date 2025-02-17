@@ -1,19 +1,37 @@
 {
   "name": "shaderforge-lib",
   "version": "0.1.0",
+  "type": "module",
   "description": "A library for creating WebGPU shader effects on webpages and webapps.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/drcircuit/shaderforge-lib.git"
   },
   "license": "SEE LICENSE IN LICENSE.md",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "package": "rm -rf dist/package && mkdir -p dist/package && cp package.json README.md dist/package/ && tsc --outDir dist/package",
+    "build:examples": "npm run package && for d in examples/*/ ; do (cd \"$d\" && rm -rf dist && npm install ../../dist/package && npm run build); done",
+    "clean": "rm -rf dist && [ -d examples ] && [ \"$(ls -A examples)\" ] && for d in examples/*/ ; do (cd \"$d\" && rm -rf dist node_modules package-lock.json); done || true"
+  },
+  "dependencies": {
+    "monaco-editor": "^0.45.0"
   },
   "devDependencies": {
     "@types/node": "^16.18.126",
+    "@webgpu/types": "^0.1.54",
     "typescript": "^4.9.5"
   }
 }

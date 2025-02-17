@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ShaderForge: hello-world</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+width: 100%;
+        height: 100%;
+        background: #1a1a1a;
+        overflow: hidden; /* Prevent scrollbars */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      #shaderforge-container {
+        position: relative;
+        width: 100%;
+        max-width: 1280px;
+        max-height: 720px;
+        aspect-ratio: 16/9;
+margin: 0 auto;
+      }
+      canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="shaderforge-container"></div>
+    <script type="module" src="/src/index.ts"></script>
+  </body>
+</html>
