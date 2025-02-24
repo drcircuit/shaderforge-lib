@@ -1,6 +1,6 @@
 {
   "name": "shaderforge-lib",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "type": "module",
   "description": "A library for creating WebGPU shader effects on webpages and webapps.",
   "main": "./dist/index.js",
@@ -14,8 +14,8 @@
     }
   },
   "files": [
-    "dist/*.js",
-    "dist/types",
+    "dist/",
+    "dist/**/*",
     "README.md",
     "LICENSE.md"
   ],
@@ -26,10 +26,14 @@
   "license": "SEE LICENSE IN LICENSE.md",
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "tsc",
+    "prebuild": "mkdir -p dist",
+    "build": "tsc --project tsconfig.json",
+    "prepare": "npm run build",
     "prepublishOnly": "npm run clean && npm run build",
+    "prepack": "npm run clean && npm run build",
     "typecheck": "tsc --noEmit",
-    "check-dist": "npm pack --dry-run"
+    "check-dist": "npm pack --dry-run && ls -la dist/",
+    "publish:local": "npm run clean && npm run build && npm publish --dry-run"
   },
   "dependencies": {
     "monaco-editor": "^0.45.0"
